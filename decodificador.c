@@ -14,50 +14,50 @@
 // imm     := ir(15 downto  0);
 // address := ir(25 downto  0);
 
-int mascaraOpCode = 0xFC000000;
-int mascaraRs = 0x03E00000;
-int mascaraRt = 0x001F0000;
-int mascaraRd = 0x0000F800;
-int mascaraShamt = 0x000007C0;
-int mascaraFunct = 0x0000003F;
+/* Definição das Máscaras. */
+int mascaraOpCode     = 0xFC000000;
+int mascaraRs         = 0x03E00000;
+int mascaraRt         = 0x001F0000;
+int mascaraRd         = 0x0000F800;
+int mascaraShamt      = 0x000007C0;
+int mascaraFunct      = 0x0000003F;
+int mascaraImmediate  = 0x0000FFFF;
+int mascaraAddress    = 0x03FFFFFF;
 
-int mascaraImmediate = 0x0000FFFF;
-int mascaraAddress = 0x03FFFFFF;
-
-char *registers[32] = {"$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2",
+char *registerName[32] = {"$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2",
                        "$a3",   "$t0", "$t1", "$t2", "$t3", "$t4", "$t5",
                        "$t6",   "$t7", "$s0", "$s1", "$s2", "$s3", "$s4",
                        "$s5",   "$s6", "$s7", "$t8", "$t9", "$k0", "$k1",
                        "$gp",   "$sp", "$fp", "$ra"};
 
+/* Função para imprimir um número 32 bits com binário.
+   Adaptado de um código encontrado na internet.    */
 void bin_prnt_byte(int x) {
-  int n;
-  printf("bin_prnt_byte begin x: %u\n");
-  for (n = 0; n < 32; n++) {
+  PRINT_FUNC_NAME;
+  int i, n;
+  TRACE("bin_prnt_byte begin x: %u\n");
+
+  char buffer [50] = {0};
+  
+  for (i = 0; i < 32; i++) {
     if ((x & 0x80000000) != 0) {
-      printf("1");
+      // printf("1");
+      n = sprintf (buffer, "%s%s", buffer, "1");
     } else {
-      printf("0");
+      // printf("0");
+      n = sprintf (buffer, "%s%s", buffer, "0");
     }
-    if (n % 4 == 3) {
-      printf(" "); /* insert a space between nybbles */
+    if ((i % 4 == 3) && i < 31) {
+      // printf(" "); /* insert a space between nybbles */
+      n = sprintf (buffer, "%s%s", buffer, " ");
     }
     x = x << 1;
   }
-  printf("\nbin_prnt_byte end.\n");
+  TRACE("[%s]\n", buffer);
+  TRACE("bin_prnt_byte end.\n");
 }
 
-void bin_prnt_int(int x)
-{
-   int hi, lo;
-   hi=(x>>8) & 0xff;
-   lo=x&0xff;
-   bin_prnt_byte(hi);
-   printf(" ");
-   bin_prnt_byte(lo);
-}
-
-
+/* Função que recupera o campo OpCode. */
 unsigned int getOpCode(unsigned int ir) {
   PRINT_FUNC_NAME;
   unsigned int opcode = ((ir & mascaraOpCode) >> 26);
@@ -65,6 +65,7 @@ unsigned int getOpCode(unsigned int ir) {
   return opcode;
 }
 
+/* Função que recupera o campo registrador Rs. */
 unsigned int getRs(unsigned int ir) {
   PRINT_FUNC_NAME;
   unsigned int rs = (ir & mascaraRs) >> 21;
@@ -72,6 +73,7 @@ unsigned int getRs(unsigned int ir) {
   return rs;
 }
 
+/* Função que recupera o campo registrador Rt. */
 unsigned int getRt(unsigned int ir) {
   PRINT_FUNC_NAME;
   unsigned int rt = (ir & mascaraRt) >> 16;
@@ -79,6 +81,7 @@ unsigned int getRt(unsigned int ir) {
   return rt;
 }
 
+/* Função que recupera o campo registrador Rd. */
 unsigned int getRd(unsigned int ir) {
   PRINT_FUNC_NAME;
   unsigned int rd = (ir & mascaraRd) >> 11;
@@ -86,6 +89,7 @@ unsigned int getRd(unsigned int ir) {
   return rd;
 }
 
+/* Função que recupera o campo Shamt (deslocamento). */
 int getShamt(unsigned int ir) {
   PRINT_FUNC_NAME;
   unsigned int shamt = (ir & mascaraShamt) >> 6;
@@ -93,6 +97,7 @@ int getShamt(unsigned int ir) {
   return shamt;
 }
 
+/* Função que recupera o campo Funct. */
 unsigned int getFunct(unsigned int ir) {
   PRINT_FUNC_NAME;
   unsigned int funct = (ir & mascaraFunct);
@@ -100,6 +105,7 @@ unsigned int getFunct(unsigned int ir) {
   return funct;
 }
 
+/* Função que recupera o campo imm. */
 int getImmediate(unsigned int ir) {
   PRINT_FUNC_NAME;
   unsigned int imm = (ir & mascaraImmediate);
@@ -107,6 +113,7 @@ int getImmediate(unsigned int ir) {
   return imm;
 }
 
+/* Função que recupera o campo Address. */
 unsigned int getAddress(unsigned int ir) {
   PRINT_FUNC_NAME;
   unsigned int address = (ir & mascaraAddress);
@@ -114,18 +121,18 @@ unsigned int getAddress(unsigned int ir) {
   return address; 
 }
 
-// Converte um char * representando um binário para inteiro.
+/* Converte um char * representando um binário, para inteiro. */
 int intFromBinary(char *s) {
   PRINT_FUNC_NAME;
   int inteiro = (int) strtol(s, 0, 2);
   TRACE("valor inteiro %d - %X - %b\n", inteiro, inteiro, inteiro);
   bin_prnt_byte(inteiro);
-  printf("\n");
+  TRACE("\n");
 
   return inteiro;
 }
 
-// Decodifica uma instrução.
+/* Decodificação das instruções. */
 void decodificar(unsigned int ir) {
   PRINT_FUNC_NAME;
   switch (getOpCode(ir)) {
@@ -133,31 +140,36 @@ void decodificar(unsigned int ir) {
       switch (getFunct(ir)) {
         case 32: { // 100000 -> add, R-Type.
           printf("add ");
-          printf("%s, ", registers[getRd(ir)]);
-          printf("%s, ", registers[getRs(ir)]);
-          printf("%s\n", registers[getRt(ir)]);
+          printf("%s, ", registerName[getRd(ir)]);
+          printf("%s, ", registerName[getRs(ir)]);
+          printf("%s\n", registerName[getRt(ir)]);
           break;
         }
 
         case 34: { // 100010 -> sub, R-Type.
           printf("sub ");
-          printf("%s, ", registers[getRd(ir)]);
-          printf("%s, ", registers[getRs(ir)]);
-          printf("%s\n", registers[getRt(ir)]);
+          printf("%s, ", registerName[getRd(ir)]);
+          printf("%s, ", registerName[getRs(ir)]);
+          printf("%s\n", registerName[getRt(ir)]);
           break;
         }
       }
       break;
     }
+    case 2: { // 000010 -> j address (26), J-Type
+      printf("j ");
+      printf("0x%0.8X\n", getAddress(ir));
+      break;
+    }
     case 35: // 100011 (lw), I-Type. lw rt, imm(rs)
       printf("lw ");
-      printf("%s, ", registers[getRt(ir)]);
+      printf("%s, ", registerName[getRt(ir)]);
       printf("%d", getImmediate(ir));
-      printf("(%s)\n", registers[getRs(ir)]);
+      printf("(%s)\n", registerName[getRs(ir)]);
       break;
 
     default: // outros casos.
-      printf("Instrução não implementada. \n");
+      fprintf(stdout, "Instrução não implementada. OpCode: %d.\n", getOpCode(ir));
   }
 }
 
@@ -166,14 +178,15 @@ int main(int argc, char *argv[]) {
   int i;
   unsigned int ir;
   if (argc < 2) {
-    printf("Uso:\n ./decodificador arquivo.b\n");
+    fprintf(stderr, "Uso:\n ./decodificador arquivo.b\n");
     return (0);
   }
 
-  printf("Argumentos:\n");
-  printf("argc = %d\n", argc);
-  for (i = 0; i < argc; i++)
-    printf("argv[%d] = %s\n", i, argv[i]);
+  TRACE("Argumentos:\n");
+  TRACE("argc = %d\n", argc);
+  for (i = 0; i < argc; i++){
+    TRACE("argv[%d] = %s\n", i, argv[i]);
+  }
 
   FILE *arquivo = fopen(argv[1], "r");
   size_t len = 32; // tamanho da linha.
@@ -185,10 +198,10 @@ int main(int argc, char *argv[]) {
   }
 
   while (getline(&linha, &len, arquivo) > 0) {
-    printf("Linha: %s", linha);
+    TRACE("Linha: %s\n", linha);
     // teste: bin_prnt_byte(0x8C130004);
     ir = intFromBinary(linha);
-    printf("IR: %u\n", ir);
+    TRACE("IR: %u\n", ir);
     decodificar(ir);
   }
 
