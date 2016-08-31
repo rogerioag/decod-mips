@@ -1,6 +1,8 @@
 
-decodificador: clean
-	gcc decodificador.c -o decodificador 
+all: decodificador
+
+decodificador: decodificador.c
+	gcc decodificador.c -o decodificador.exe
 
 clean: 
-	rm decodificador
+	rm *.exe
