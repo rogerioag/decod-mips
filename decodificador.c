@@ -138,7 +138,13 @@ void decodificar(unsigned int ir) {
   switch (getOpCode(ir)) {
     case 0: { // 000000, Aritmética.
       switch (getFunct(ir)) {
-        case 32: { // 100000 -> add, R-Type.
+        case 0:{
+		if(getRd(ir) == 0 && getRs(ir) == 0 && getRt(ir) == 0){
+			printf("nop\n");
+		}
+		break;
+	}
+	case 32: { // 100000 -> add, R-Type.
           printf("add ");
           printf("%s, ", registerName[getRd(ir)]);
           printf("%s, ", registerName[getRs(ir)]);
