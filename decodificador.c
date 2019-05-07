@@ -142,9 +142,17 @@ void decodificar(unsigned int ir) {
 		case 0: { // 000000, Aritmética.
 			// Recupera o Funct.
 			switch (getFunct(ir)) {
-				case 0:{
+				case 0:{ // NOP
 					if(getRd(ir) == 0 && getRs(ir) == 0 && getRt(ir) == 0){
 						fprintf(stdout, "nop\n");
+					}
+					else{ 	// SLL -- Shift left logical
+							// Syntax: sll $d, $t, h
+							// Encoding: 0000 00ss ssst tttt dddd dhhh hh00 0000
+						fprintf(stdout, "sll ");
+						fprintf(stdout, "%s, ", registerName[getRd(ir)]);
+						fprintf(stdout, "%s, ", registerName[getRt(ir)]);
+						fprintf(stdout, "%d\n", getShamt(ir));
 					}
 					break;
 				}
@@ -179,7 +187,7 @@ void decodificar(unsigned int ir) {
 			fprintf(stdout, "beq ");
 			fprintf(stdout, "%s, ", registerName[getRs(ir)]);
 			fprintf(stdout, "%s, ", registerName[getRt(ir)]);
-			fprintf(stdout, "%s\n", getImmediate(ir));
+			fprintf(stdout, "%#0.4x\n", getImmediate(ir));
 			break;
 		}
 		
