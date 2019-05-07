@@ -167,9 +167,19 @@ void decodificar(unsigned int ir) {
 			break;
 		}
 		
-		case 2: { // 000010 -> j address (26), J-Type
+		case 2:	{ // 000010 -> j address (26), J-Type
 			fprintf(stdout, "j ");
 			fprintf(stdout, "0x%0.8X\n", getAddress(ir));
+			break;
+		}
+
+		case 4:	{ // BEQ -- Branch on equal, Description: Branches if the two registers are equal. 
+				  // Syntax: beq $s, $t, offset
+				  // 0001 00ss ssst tttt iiii iiii iiii iiii
+			fprintf(stdout, "beq ");
+			fprintf(stdout, "%s, ", registerName[getRs(ir)]);
+			fprintf(stdout, "%s, ", registerName[getRt(ir)]);
+			fprintf(stdout, "%s\n", getImmediate(ir));
 			break;
 		}
 		
